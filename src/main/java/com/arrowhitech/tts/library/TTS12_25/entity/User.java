@@ -27,13 +27,17 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(unique = true, length = 10)
+    private String phone;
+
+    @Column(unique = true, length = 100)
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Role role = Role.READER;
 
     @CreationTimestamp

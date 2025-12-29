@@ -1,7 +1,7 @@
 package com.arrowhitech.tts.library.TTS12_25.service;
 
 
-import com.arrowhitech.tts.library.TTS12_25.dto.LoginResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.auth.LoginResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
