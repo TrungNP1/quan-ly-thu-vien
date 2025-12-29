@@ -36,6 +36,9 @@ public class User {
     @Column(unique = true, length = 100)
     private String email;
 
+    @Column(unique = true, nullable = false, length = 10)
+    private String code;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.READER;

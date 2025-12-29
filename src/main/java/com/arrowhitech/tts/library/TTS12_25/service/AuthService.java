@@ -28,7 +28,6 @@ public class AuthService {
 
         String newAccessToken = jwtService.generateAccessToken(username);
         String newRefreshToken = jwtService.generateRefreshToken(username);
-
         return new LoginResponseDTO(newAccessToken, newRefreshToken);
     }
 
@@ -36,14 +35,12 @@ public class AuthService {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Tên người dùng không được để trống.");
         }
-
         // Kiểm tra user có tồn tại không
         if (!userService.existsByUsername(username)) {
             // Không tiết lộ thông tin user có tồn tại hay không vì lý do bảo mật
             // Vẫn trả về message thành công để tránh user enumeration attack
             return null;
         }
-
         // Tạo reset token
         return jwtService.generateResetToken(username);
     }

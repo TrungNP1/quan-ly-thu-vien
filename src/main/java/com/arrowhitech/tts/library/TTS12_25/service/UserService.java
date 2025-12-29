@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.Objects;
 
 @Service
@@ -31,6 +32,16 @@ public class UserService implements UserDetailsService {
     private final UserMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tên người dùng."));
+        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities(user.getRole().name())
+                .build();
+    }
+
     private String getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
@@ -40,6 +51,21 @@ public class UserService implements UserDetailsService {
         return auth.getName();
     }
 
+    private String generateCode() {
+        int currentYear = Year.now().getValue();
+        int yearSuffix = currentYear % 100;
+        // Kiểm tra trùng code nếu trùng sẽ tạo lại bằng cách tăng code
+        for (int attempt = 0; attempt < 10; attempt++) {
+            long countInYear = userRepository.countByYear(currentYear);
+            long sequenceNumber = countInYear + 1;
+            String code = String.format("LIB%02d%04d", yearSuffix, sequenceNumber);
+            if (!userRepository.existsByCode(code)) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("Không thể tạo code duy nhất cho user");
+    }
+
     public User register(String username, String rawPassword, Role roleName) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Tên người dùng đã tồn tại.");
@@ -47,21 +73,13 @@ public class UserService implements UserDetailsService {
         User user = User.builder()
                 .username(username.trim())
                 .password(passwordEncoder.encode(rawPassword.trim()))
+                .code(generateCode())
                 .role(roleName)
                 .createdAt(LocalDateTime.now())
                 .build();
         return userRepository.save(user);
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tên người dùng."));
-        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
-                .password(user.getPassword())
-                .authorities("ROLE_" + user.getRole().name())
-                .build();
-    }
 
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
@@ -100,23 +118,24 @@ public class UserService implements UserDetailsService {
                         HttpStatus.NOT_FOUND,
                         "Không tìm thấy người dùng")
                 );
+        if (dto.getFullName() != null && !dto.getFullName().isEmpty()){
+            user.setFullName(dto.getFullName().trim());
+        }
 
-        // 1. Kiểm tra trùng số điện thoại (Sử dụng Objects.equals để tránh NullPointerException)
-        if (dto.getPhone() != null && !Objects.equals(user.getPhone(), dto.getPhone())) {
-            if (userRepository.existsByPhone(dto.getPhone())) {
+        // Kiểm tra trùng số điện thoại (Sử dụng Objects.equals để tránh NullPointerException)
+        if (dto.getPhone() != null && !Objects.equals(user.getPhone().trim(), dto.getPhone().trim())) {
+            if (userRepository.existsByPhone(dto.getPhone().trim())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại đã tồn tại.");
             }
+            user.setPhone(dto.getPhone().trim());
         }
 
-        if (dto.getEmail() != null && !Objects.equals(user.getEmail(), dto.getEmail())) {
-            if (userRepository.existsByEmail(dto.getEmail())) {
+        if (dto.getEmail() != null && !Objects.equals(user.getEmail().trim(), dto.getEmail().trim())) {
+            if (userRepository.existsByEmail(dto.getEmail().trim())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email đã tồn tại.");
             }
+            user.setEmail(dto.getEmail().trim());
         }
-
-        user.setFullName(dto.getFullName());
-        user.setPhone(dto.getPhone());
-        user.setEmail(dto.getEmail());
 
         User saved = userRepository.save(user);
         return mapper.mapToUserResponseDTO(saved);
