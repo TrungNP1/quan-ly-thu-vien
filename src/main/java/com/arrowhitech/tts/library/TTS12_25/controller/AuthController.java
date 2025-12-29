@@ -1,9 +1,7 @@
 package com.arrowhitech.tts.library.TTS12_25.controller;
 
 
-import com.arrowhitech.tts.library.TTS12_25.dto.LoginRequestDTO;
-import com.arrowhitech.tts.library.TTS12_25.dto.LoginResponseDTO;
-import com.arrowhitech.tts.library.TTS12_25.dto.RegisterRequestDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.auth.*;
 import com.arrowhitech.tts.library.TTS12_25.entity.User;
 import com.arrowhitech.tts.library.TTS12_25.enums.Role;
 import com.arrowhitech.tts.library.TTS12_25.response.BaseResponse;
@@ -35,10 +33,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDTO req) {
         User user = userService.register(
-                req.getUsername(), req.getPassword(),
-                Role.READER, req.getFullName(), req.getEmail()
+                req.getUsername().trim(), req.getPassword().trim(), Role.READER
         );
-
         return ResponseEntity.ok(
                 BaseResponse.builder()
                         .status(200)
@@ -48,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<BaseResponse<?>> login(@RequestBody LoginRequestDTO req) {
+    public ResponseEntity<BaseResponse<?>> login(@Valid @RequestBody LoginRequestDTO req) {
         // Xác thực thông tin đăng nhập
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -66,68 +62,5 @@ public class AuthController {
                         .build()
         );
     }
-
-//    @PostMapping("/refresh")
-//    public ResponseEntity<BaseResponse<?>> refresh(@RequestBody RefreshTokenRequestDTO req) {
-//        try {
-//            LoginResponseDTO loginResponse = authService.refreshToken(req.getRefreshToken());
-//            return ResponseEntity.ok(
-//                    BaseResponse.builder()
-//                            .status(200)
-//                            .message("Làm mới token thành công.")
-//                            .data(loginResponse)
-//                            .build()
-//            );
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(
-//                    BaseResponse.builder()
-//                            .status(400)
-//                            .message(e.getMessage())
-//                            .build()
-//            );
-//        }
-//    }
-//
-//    @PostMapping("/forget-password")
-//    public ResponseEntity<BaseResponse<?>> forgetPassword(@RequestBody ForgetPasswordRequestDTO req) {
-//        try {
-//            String resetToken = authService.forgetPassword(req.getUsername());
-//            // Luôn trả về message thành công để tránh user enumeration attack
-//            return ResponseEntity.ok(
-//                    BaseResponse.builder()
-//                            .status(200)
-//                            .message("Nếu tên người dùng tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.")
-//                            .data(resetToken != null ? Map.of("resetToken", resetToken) : null)
-//                            .build()
-//            );
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(
-//                    BaseResponse.builder()
-//                            .status(400)
-//                            .message(e.getMessage())
-//                            .build()
-//            );
-//        }
-//    }
-//
-//    @PostMapping("/reset-password")
-//    public ResponseEntity<BaseResponse<?>> resetPassword(@RequestBody ResetPasswordRequestDTO req) {
-//        try {
-//            authService.resetPassword(req.getResetToken(), req.getNewPassword());
-//            return ResponseEntity.ok(
-//                    BaseResponse.builder()
-//                            .status(200)
-//                            .message("Đặt lại mật khẩu thành công.")
-//                            .build()
-//            );
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(
-//                    BaseResponse.builder()
-//                            .status(400)
-//                            .message(e.getMessage())
-//                            .build()
-//            );
-//        }
-//    }
 
 }
