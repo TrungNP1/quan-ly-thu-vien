@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: todo
+      POSTGRES_DB: library
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     ports:

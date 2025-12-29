@@ -1,4 +1,4 @@
-package com.arrowhitech.tts.library.TTS12_25.dto;
+package com.arrowhitech.tts.library.TTS12_25.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,25 +1,28 @@
 spring:
-    application:
-        name:TTS-1225
-    datasource:
-        url:jdbc:postgresql://localhost:5432/library
-        username:admin
-        password:admin
-    jpa:
-        hibernate:
-            ddl-auto:update
-        show-sql: true
+  application:
+    name: library-project
+  datasource:
+    url: jdbc:postgresql://localhost:5432/library
+    username: admin
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
 #  redis:
 #    host: localhost
 #    port: 6379
 #
 #  kafka:
 #    bootstrap-servers: localhost:9092
+
 jwt:
-##  secret: dev-secret-trungnp-122025
-    secret:Q2hhYkdQbXh1S0s3RjB1R2E5RkZ0cElIQ1dsQkF2NXRmR2dHdGxjR3E5aw==
-    access-expiration-ms:3600000
-    refresh-expiration-ms:86400000
-    reset-expiration-ms:900000
+  ##  secret: dev-secret-trungnp-122025
+  secret: Q2hhYkdQbXh1S0s3RjB1R2E5RkZ0cElIQ1dsQkF2NXRmR2dHdGxjR3E5aw==
+  access-expiration-ms: 3600000
+  refresh-expiration-ms: 86400000
+  reset-expiration-ms: 900000
+
 server:
-    port:8080
+  port: 8080
