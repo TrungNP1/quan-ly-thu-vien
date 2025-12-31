@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.arrowhitech.tts.library.TTS12_25.dto.CategoryRequestDTO;
-import com.arrowhitech.tts.library.TTS12_25.dto.CategoryResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.category.CategoryRequestDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.category.CategoryResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.response.BaseResponse;
 import com.arrowhitech.tts.library.TTS12_25.service.CategoryService;
 

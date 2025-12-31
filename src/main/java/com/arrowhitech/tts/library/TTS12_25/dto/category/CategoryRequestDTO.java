@@ -1,4 +1,4 @@
-package com.arrowhitech.tts.library.TTS12_25.dto;
+package com.arrowhitech.tts.library.TTS12_25.dto.category;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

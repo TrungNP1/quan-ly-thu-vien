@@ -4,9 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.arrowhitech.tts.library.TTS12_25.dto.CategoryRequestDTO;
-import com.arrowhitech.tts.library.TTS12_25.dto.CategoryResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.category.CategoryRequestDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.category.CategoryResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.entity.Category;
+import com.arrowhitech.tts.library.TTS12_25.repository.BookRepository;
 import com.arrowhitech.tts.library.TTS12_25.repository.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final BookRepository bookRepository;
 
     private CategoryResponseDTO toDTO(Category cat){
         return CategoryResponseDTO.builder()
@@ -66,6 +68,10 @@ public class CategoryService {
         if(!categoryRepository.existsById(id)){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Không tìm thấy thể loại");
+        }
+
+        if(bookRepository.existsByCategoryId(id)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Thể loại có chứa sách, chuyển sách sang thể loại khác trước khi xóa");
         }
 
         categoryRepository.deleteById(id);

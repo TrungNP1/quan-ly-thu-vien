@@ -1,22 +1,33 @@
 package com.arrowhitech.tts.library.TTS12_25.repository;
 import com.arrowhitech.tts.library.TTS12_25.entity.Book;
-import com.arrowhitech.tts.library.TTS12_25.entity.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
-
+import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
-    List<Book> findByTitleContaining(String title);
-    List<Book> findByAuthorContaining(String author);
-    List<Book> findByCategoryId(Long categoryId);
+    //Kiểm tra
+    Optional<Book> findByTitleAndAuthor(String title, String author);
     boolean existsByCategoryId(Long categoryId);
-    List<Book> findByCategory(Category category);
 
-    List<Book> findByIsActiveTrue();
-    List<Book> findByIsActiveFalse();
-    List<Book> findByIsActiveTrueAndTitleContaining(String title);
-    List<Book> findByIsActiveTrueAndAuthorContaining(String title);
+    //User
+    @Query("SELECT b FROM Book b WHERE b.isActive = true AND b.availableCopies > 0")
+    Page<Book> findAvailableBooks(Pageable page);
+
+    @Query("SELECT b FROM Book b WHERE b.isActive = true AND b.availableCopies > 0 AND b.title LIKE %:title%")
+    Page<Book> findAvailableBooksByTitle(@Param("title") String title, Pageable page);
+    
+    @Query("SELECT b FROM Book b WHERE b.isActive = true AND b.availableCopies > 0 AND b.author LIKE %:author%")
+    Page<Book> findAvailableBooksByAuthor(@Param("author") String author, Pageable page);
+
+    //Admin
+    Page<Book> findByTitleContaining(String title, Pageable page);
+    Page<Book> findByAuthorContaining(String author, Pageable page);
+    Page<Book> findByIsActive(Boolean status, Pageable page);
+
 }
