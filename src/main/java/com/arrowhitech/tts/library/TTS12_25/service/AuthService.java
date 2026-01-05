@@ -43,11 +43,13 @@ public class AuthService {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Tên người dùng không được để trống.");
         }
+
         // Kiểm tra user có tồn tại không
         if (!userService.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Tên tài khoản không tồn tại");
         }
+
         // Tạo reset token
         return jwtService.generateResetToken(username);
     }

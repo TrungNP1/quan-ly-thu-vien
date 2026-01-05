@@ -1,6 +1,5 @@
 package com.arrowhitech.tts.library.TTS12_25.repository;
 
-
 import com.arrowhitech.tts.library.TTS12_25.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
