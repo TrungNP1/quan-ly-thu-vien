@@ -5,16 +5,14 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class RegisterRequestDTO {
-    @NotBlank(message = "Tên tài khoản không được để trống")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$",
-            message = "Tài khoản không được phép chứa khoảng trắng và ký tự đặc biệt")
-    private String username;
+public class ChangePasswordRequestDTO {
+    @NotBlank(message = "Mật khẩu cũ không được để trống")
+    private String oldPassword;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
+    @NotBlank(message = "Mật khẩu mới không được để trống")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
             message = "Mật khẩu ít nhất 8 kí tự, có ít nhất 1 chữ in hoa, kí tự đặc biệt và số"
     )
-    private String password;
+    private String newPassword;
 }

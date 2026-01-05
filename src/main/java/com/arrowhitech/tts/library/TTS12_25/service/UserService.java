@@ -42,13 +42,16 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
-    private String getCurrentUser() {
+    public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Bạn chưa đăng nhập");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn chưa đăng nhập");
         }
-        return auth.getName();
+
+        String username = auth.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Không tìm thấy thông tin người dùng"));
     }
 
     private String generateCode() {
@@ -85,13 +88,6 @@ public class UserService implements UserDetailsService {
         return userRepository.existsByUsername(username);
     }
 
-    public User findByUserName(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Tài khoản không tồn tại hoặc phiên đăng nhập hết hạn"));
-    }
-
     public void resetPassword(String username, String newPassword) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -101,23 +97,13 @@ public class UserService implements UserDetailsService {
     }
 
     public UserResponseDTO getUserProfile() {
-        String currentUser = getCurrentUser();
-        User user = userRepository.findByUsername(currentUser)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Không tìm thấy người dùng")
-                );
-        return mapper.mapToUserResponseDTO(user);
+        User currentUser = getCurrentUser();
+        return mapper.mapToUserResponseDTO(currentUser);
     }
 
 
     public UserResponseDTO updateUserProfile(UpdateProfileDTO dto) {
-        String currentUser = getCurrentUser();
-        User user = userRepository.findByUsername(currentUser)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Không tìm thấy người dùng")
-                );
+        User user = getCurrentUser();
         if (dto.getFullName() != null && !dto.getFullName().isEmpty()){
             user.setFullName(dto.getFullName().trim());
         }

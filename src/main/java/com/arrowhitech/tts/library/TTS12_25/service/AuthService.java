@@ -1,9 +1,15 @@
 package com.arrowhitech.tts.library.TTS12_25.service;
 
 
-import com.arrowhitech.tts.library.TTS12_25.dto.auth.LoginResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.auth.ChangePasswordRequestDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.auth.RefreshTokenResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.entity.User;
+import com.arrowhitech.tts.library.TTS12_25.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -11,8 +17,10 @@ public class AuthService {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public LoginResponseDTO refreshToken(String refreshToken) {
+    public RefreshTokenResponseDTO refreshToken(String refreshToken) {
         if (refreshToken == null || refreshToken.isEmpty()) {
             throw new IllegalArgumentException("Refresh token không được để trống.");
         }
@@ -28,7 +36,7 @@ public class AuthService {
 
         String newAccessToken = jwtService.generateAccessToken(username);
         String newRefreshToken = jwtService.generateRefreshToken(username);
-        return new LoginResponseDTO(newAccessToken, newRefreshToken);
+        return new RefreshTokenResponseDTO(newAccessToken, newRefreshToken);
     }
 
     public String forgetPassword(String username) {
@@ -37,9 +45,8 @@ public class AuthService {
         }
         // Kiểm tra user có tồn tại không
         if (!userService.existsByUsername(username)) {
-            // Không tiết lộ thông tin user có tồn tại hay không vì lý do bảo mật
-            // Vẫn trả về message thành công để tránh user enumeration attack
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Tên tài khoản không tồn tại");
         }
         // Tạo reset token
         return jwtService.generateResetToken(username);
@@ -65,6 +72,21 @@ public class AuthService {
 
         // Reset password
         userService.resetPassword(username, newPassword);
+    }
+
+    public void changePassword(ChangePasswordRequestDTO req){
+        User user = userService.getCurrentUser();
+
+        if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())){
+            throw new IllegalArgumentException("Mật khẩu cũ không chính xác");
+        }
+
+        if (req.getOldPassword().equals(req.getNewPassword())){
+            throw new IllegalArgumentException("Mật khẩu mới không được trùng mật khẩu cũ");
+        }
+
+        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        userRepository.save(user);
     }
 }
 

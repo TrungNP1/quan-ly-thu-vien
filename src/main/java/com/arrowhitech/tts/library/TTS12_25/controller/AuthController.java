@@ -1,6 +1,5 @@
 package com.arrowhitech.tts.library.TTS12_25.controller;
 
-
 import com.arrowhitech.tts.library.TTS12_25.dto.auth.*;
 import com.arrowhitech.tts.library.TTS12_25.entity.User;
 import com.arrowhitech.tts.library.TTS12_25.enums.Role;
@@ -66,7 +65,7 @@ public class AuthController {
     }
 
     @PostMapping("/forget-password")
-    public ResponseEntity<BaseResponse<?>> forgetPassword(@RequestBody ForgetPasswordRequestDTO req) {
+    public ResponseEntity<BaseResponse<?>> forgetPassword(@Valid @RequestBody ForgetPasswordRequestDTO req) {
         try {
             String resetToken = authService.forgetPassword(req.getUsername());
             // Luôn trả về message thành công để tránh user enumeration attack
@@ -86,46 +85,65 @@ public class AuthController {
             );
         }
     }
-//    @PostMapping("/refresh")
-//    public ResponseEntity<BaseResponse<?>> refresh(@RequestBody RefreshTokenRequestDTO req) {
-//        try {
-//            LoginResponseDTO loginResponse = authService.refreshToken(req.getRefreshToken());
-//            return ResponseEntity.ok(
-//                    BaseResponse.builder()
-//                            .status(200)
-//                            .message("Làm mới token thành công.")
-//                            .data(loginResponse)
-//                            .build()
-//            );
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(
-//                    BaseResponse.builder()
-//                            .status(400)
-//                            .message(e.getMessage())
-//                            .build()
-//            );
-//        }
-//    }
-//
-//
-//    @PostMapping("/reset-password")
-//    public ResponseEntity<BaseResponse<?>> resetPassword(@RequestBody ResetPasswordRequestDTO req) {
-//        try {
-//            authService.resetPassword(req.getResetToken(), req.getNewPassword());
-//            return ResponseEntity.ok(
-//                    BaseResponse.builder()
-//                            .status(200)
-//                            .message("Đặt lại mật khẩu thành công.")
-//                            .build()
-//            );
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(
-//                    BaseResponse.builder()
-//                            .status(400)
-//                            .message(e.getMessage())
-//                            .build()
-//            );
-//        }
-//    }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<BaseResponse<?>> refresh(@Valid @RequestBody RefreshTokenRequestDTO req) {
+        try {
+            RefreshTokenResponseDTO responseDTO = authService.refreshToken(req.getRefreshToken());
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Làm mới token thành công.")
+                            .data(responseDTO)
+                            .build()
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    BaseResponse.builder()
+                            .status(400)
+                            .message(e.getMessage())
+                            .build()
+            );
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<BaseResponse<?>> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO req) {
+        try {
+            authService.resetPassword(req.getResetToken(), req.getNewPassword());
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Đặt lại mật khẩu thành công.")
+                            .build()
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    BaseResponse.builder()
+                            .status(400)
+                            .message(e.getMessage())
+                            .build()
+            );
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<BaseResponse<?>> changePassword(@Valid @RequestBody ChangePasswordRequestDTO req) {
+        try {
+            authService.changePassword(req);
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Đổi mật khẩu thành công.")
+                            .build()
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    BaseResponse.builder()
+                            .status(400)
+                            .message(e.getMessage())
+                            .build()
+            );
+        }
+    }
 }
