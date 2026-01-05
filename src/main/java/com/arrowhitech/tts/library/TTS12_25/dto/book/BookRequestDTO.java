@@ -1,7 +1,5 @@
 package com.arrowhitech.tts.library.TTS12_25.dto.book;
 
-import com.arrowhitech.tts.library.TTS12_25.entity.Category;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

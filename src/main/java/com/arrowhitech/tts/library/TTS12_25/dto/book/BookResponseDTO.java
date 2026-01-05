@@ -1,7 +1,5 @@
 package com.arrowhitech.tts.library.TTS12_25.dto.book;
 
-import com.arrowhitech.tts.library.TTS12_25.entity.Category;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
