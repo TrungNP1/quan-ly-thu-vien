@@ -22,7 +22,7 @@ public class JwtService {
     private long refreshExpirationMs;
 
     @Value("${jwt.reset-expiration-ms}")
-    private long resetExpirationMs; // 15 phút mặc định
+    private long resetExpirationMs;
 
     private Key getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
