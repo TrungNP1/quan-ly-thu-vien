@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/loans")
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class LoanController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<?>> loan(
             @Valid @RequestBody LoanRequestDTO dto) {
-        LoanResponseDTO response = loanService.loan(dto);
+        List<LoanResponseDTO> response = loanService.loan(dto);
         return ResponseEntity.ok(
                 BaseResponse.builder()
                         .status(200)

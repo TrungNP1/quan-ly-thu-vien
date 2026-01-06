@@ -247,7 +247,7 @@ POST http://localhost:8080/api/loans
 Authorization: Bearer <accessToken>
 Body (raw JSON):
 {
-    "bookId": 1,
+    "bookIds": [1, 2],
     "userCode": "US0000011"
 }
 ```
