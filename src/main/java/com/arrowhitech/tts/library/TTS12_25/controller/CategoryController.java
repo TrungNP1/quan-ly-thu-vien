@@ -3,6 +3,7 @@ package com.arrowhitech.tts.library.TTS12_25.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,52 +28,56 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<?>> create(
-        @Valid @RequestBody CategoryRequestDTO dto){
-            CategoryResponseDTO response = categoryService.create(dto);
-            return ResponseEntity.ok(
+            @Valid @RequestBody CategoryRequestDTO dto) {
+        CategoryResponseDTO response = categoryService.create(dto);
+        return ResponseEntity.ok(
                 BaseResponse.builder()
-                .status(200)
-                .message("Tạo thể loại mới thành công")
-                .data(response)
-                .build()
-            );
-        }
+                        .status(200)
+                        .message("Tạo thể loại mới thành công")
+                        .data(response)
+                        .build()
+        );
+    }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<?>> update(
-        @PathVariable Long id,
-        @Valid @RequestBody CategoryRequestDTO dto){
-            CategoryResponseDTO response = categoryService.update(id, dto);
-            return ResponseEntity.ok(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryRequestDTO dto) {
+        CategoryResponseDTO response = categoryService.update(id, dto);
+        return ResponseEntity.ok(
                 BaseResponse.builder()
-                .status(200)
-                .message("Sửa thể loại thành công")
-                .data(response)
-                .build()
-            );
-        }
+                        .status(200)
+                        .message("Sửa thể loại thành công")
+                        .data(response)
+                        .build()
+        );
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<BaseResponse<?>> delete(@PathVariable Long id){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse<?>> delete(@PathVariable Long id) {
         categoryService.delete(id);
         return ResponseEntity.ok(
-            BaseResponse.builder()
-            .status(200)
-            .message("Xóa thể loại thành công")
-            .build()
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Xóa thể loại thành công")
+                        .build()
         );
     }
 
     @GetMapping
-    public ResponseEntity<BaseResponse<?>> getAll(){
+    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
+    public ResponseEntity<BaseResponse<?>> getAll() {
         List<CategoryResponseDTO> catList = categoryService.getAll();
         return ResponseEntity.ok(
-            BaseResponse.builder()
-            .status(200)
-            .message("Lấy danh sách thư mục thành công")
-            .data(catList)
-            .build()
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Lấy danh sách thư mục thành công")
+                        .data(catList)
+                        .build()
         );
     }
 
