@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -36,6 +35,7 @@ public class LoanService {
                 .bookId(loan.getBook().getId())
                 .bookTitle(loan.getBook().getTitle())
                 .userId(loan.getUser().getId())
+                .userCode(loan.getUser().getCode())
                 .username(loan.getUser().getUsername())
                 .fullName(loan.getUser().getFullName())
                 .borrowDate(loan.getBorrowDate())
@@ -45,31 +45,46 @@ public class LoanService {
                 .build();
     }
 
-    //Mượn sách
+    // Admin tạo phiếu mượn
     public LoanResponseDTO loan(LoanRequestDTO dto) {
-        User user = userService.getCurrentUser();
+        
+        User user = userRepository.findByCode(dto.getUserCode())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với mã: " + dto.getUserCode()));
+
         Book book = bookRepository.findById(dto.getBookId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
 
-        if (loanRepository.existsByUserAndStatus(user, LoanStatus.OVERDUE)) {
+        // Check thông tin liên hệ
+        if (user.getPhone() == null || user.getPhone().isBlank() 
+                || user.getEmail() == null || user.getEmail().isBlank()) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Bạn không thể mượn thêm vì đã để sách quá hạn không trả");
+                    HttpStatus.BAD_REQUEST, "Người dùng chưa khai báo thông tin liên hệ (phone/email)");
         }
 
+        // Check sách quá hạn
+        if (loanRepository.existsByUserAndStatus(user, LoanStatus.OVERDUE)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Người dùng không thể mượn vì đang có sách quá hạn chưa trả");
+        }
+
+        // Check sách khả dụng
         if (!book.getIsActive() || book.getAvailableCopies() <= 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Sách không khả dụng");
         }
 
+        // Check giới hạn 5 quyển
         if (loanRepository.countByUserAndStatus(user, LoanStatus.BORROWING) >= 5) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Bạn không thể mượn thêm vì đã mượn 5 quyển sách");
+                    HttpStatus.BAD_REQUEST, "Người dùng đã mượn tối đa 5 quyển sách");
         }
 
+        // Check đang mượn sách này
         if (loanRepository.findByUserAndBookAndStatus(user, book, LoanStatus.BORROWING).isPresent()) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Bạn không thể mượn thêm vì đang mượn quyển sách tương tự");
+                    HttpStatus.BAD_REQUEST, "Người dùng đang mượn quyển sách này rồi");
         }
 
         Loan entity = Loan.builder()
@@ -85,7 +100,6 @@ public class LoanService {
         Loan saved = loanRepository.save(entity);
 
         return toDTO(saved);
-
     }
 
     //Trả sách

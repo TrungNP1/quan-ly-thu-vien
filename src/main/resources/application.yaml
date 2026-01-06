@@ -9,6 +9,14 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
+  sql:
+    init:
+      mode: always
 
 #  redis:
 #    host: localhost

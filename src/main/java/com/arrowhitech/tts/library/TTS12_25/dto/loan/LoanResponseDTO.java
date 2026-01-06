@@ -16,8 +16,9 @@ public class LoanResponseDTO {
     private Long id;
     private Long bookId;
     private String bookTitle;
-    private String username;
     private Long userId;
+    private String userCode;
+    private String username;
     private String fullName;
     private LocalDateTime borrowDate;
     private LocalDateTime dueDate;

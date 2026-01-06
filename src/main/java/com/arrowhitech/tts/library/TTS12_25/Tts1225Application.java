@@ -12,5 +12,4 @@ public class Tts1225Application {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 		SpringApplication.run(Tts1225Application.class, args);
 	}
-
 }
