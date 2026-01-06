@@ -8,6 +8,7 @@ import com.arrowhitech.tts.library.TTS12_25.enums.LoanStatus;
 import com.arrowhitech.tts.library.TTS12_25.repository.BookRepository;
 import com.arrowhitech.tts.library.TTS12_25.repository.LoanRepository;
 import com.arrowhitech.tts.library.TTS12_25.repository.UserRepository;
+import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
 import com.arrowhitech.tts.library.TTS12_25.entity.Book;
 
 import lombok.RequiredArgsConstructor;
@@ -156,32 +157,36 @@ public class LoanService {
 
     //Admin
     // Xem tất cả thông tin mượn sách
-    public Page<LoanResponseDTO> getAllForAdmin(Pageable page) {
+    public PaginationResponse<LoanResponseDTO> getAllForAdmin(Pageable page) {
         Page<Loan> loans = loanRepository.findAll(page);
-        return loans.map(this::toDTO);
+        Page<LoanResponseDTO> dtoPage = loans.map(this::toDTO);
+        return PaginationResponse.from(dtoPage);
     }
 
     //Lọc theo user
-    public Page<LoanResponseDTO> getByUserId(Long userId, Pageable page) {
+    public PaginationResponse<LoanResponseDTO> getByUserId(Long userId, Pageable page) {
         Page<Loan> loans = loanRepository.findByUserId(userId, page);
-        return loans.map(this::toDTO);
+        Page<LoanResponseDTO> dtoPage = loans.map(this::toDTO);
+        return PaginationResponse.from(dtoPage);
     }
 
     //Lọc theo sách
-    public Page<LoanResponseDTO> getByBookId(Long bookId, Pageable page) {
+    public PaginationResponse<LoanResponseDTO> getByBookId(Long bookId, Pageable page) {
         Page<Loan> loans = loanRepository.findByBookId(bookId, page);
-        return loans.map(this::toDTO);
+        Page<LoanResponseDTO> dtoPage = loans.map(this::toDTO);
+        return PaginationResponse.from(dtoPage);
     }
 
     //Lọc theo trạng thái
-    public Page<LoanResponseDTO> getByStatus(LoanStatus status, Pageable page) {
+    public PaginationResponse<LoanResponseDTO> getByStatus(LoanStatus status, Pageable page) {
         Page<Loan> loans = loanRepository.findByStatus(status, page);
-        return loans.map(this::toDTO);
+        Page<LoanResponseDTO> dtoPage = loans.map(this::toDTO);
+        return PaginationResponse.from(dtoPage);
     }
 
     //User
     //Xem lịch sử của mình
-    public Page<LoanResponseDTO> getMyHistory(LoanStatus status, Pageable page) {
+    public PaginationResponse<LoanResponseDTO> getMyHistory(LoanStatus status, Pageable page) {
         User user = userService.getCurrentUser();
         Page<Loan> loans;
 
@@ -190,6 +195,7 @@ public class LoanService {
         } else {
             loans = loanRepository.findByUser(user, page);
         }
-        return loans.map(this::toDTO);
+        Page<LoanResponseDTO> dtoPage = loans.map(this::toDTO);
+        return PaginationResponse.from(dtoPage);
     }
 }

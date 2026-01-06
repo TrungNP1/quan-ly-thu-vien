@@ -2,7 +2,6 @@ package com.arrowhitech.tts.library.TTS12_25.controller;
 
 import com.arrowhitech.tts.library.TTS12_25.dto.book.BookRequestDTO;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.arrowhitech.tts.library.TTS12_25.dto.book.BookResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.response.BaseResponse;
+import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
 import com.arrowhitech.tts.library.TTS12_25.service.BookService;
 
 import jakarta.validation.Valid;
@@ -82,7 +82,7 @@ public class BookController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<BookResponseDTO> response = bookService.getAllForUser(pageable);
+        PaginationResponse<BookResponseDTO> response = bookService.getAllForUser(pageable);
         return ResponseEntity.ok(
                 BaseResponse.builder()
                         .status(200)
@@ -102,7 +102,7 @@ public class BookController {
         Pageable pageable = PageRequest.of(page, size);
 
         if (status != null) {
-            Page<BookResponseDTO> response = bookService.getByStatus(status, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.getByStatus(status, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -112,7 +112,7 @@ public class BookController {
             );
         }
 
-        Page<BookResponseDTO> response = bookService.getAllForAdmin(pageable);
+        PaginationResponse<BookResponseDTO> response = bookService.getAllForAdmin(pageable);
         return ResponseEntity.ok(
                 BaseResponse.builder()
                         .status(200)
@@ -163,7 +163,7 @@ public class BookController {
         }
 
         if (title != null) {
-            Page<BookResponseDTO> response = bookService.searchTitleForUser(title, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchTitleForUser(title, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -172,7 +172,7 @@ public class BookController {
                             .build()
             );
         } else {
-            Page<BookResponseDTO> response = bookService.searchAuthorForUser(author, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchAuthorForUser(author, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -198,7 +198,7 @@ public class BookController {
         }
 
         if (title != null) {
-            Page<BookResponseDTO> response = bookService.searchTitleForAdmin(title, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchTitleForAdmin(title, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -207,7 +207,7 @@ public class BookController {
                             .build()
             );
         } else {
-            Page<BookResponseDTO> response = bookService.searchAuthorForAdmin(author, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchAuthorForAdmin(author, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)

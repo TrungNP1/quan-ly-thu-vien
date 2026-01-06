@@ -4,10 +4,10 @@ import com.arrowhitech.tts.library.TTS12_25.dto.loan.LoanRequestDTO;
 import com.arrowhitech.tts.library.TTS12_25.dto.loan.LoanResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.enums.LoanStatus;
 import com.arrowhitech.tts.library.TTS12_25.response.BaseResponse;
+import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
 import com.arrowhitech.tts.library.TTS12_25.service.LoanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -63,7 +63,7 @@ public class LoanController {
         Pageable pageable = PageRequest.of(page, size);
 
         if (userId != null) {
-            Page<LoanResponseDTO> response = loanService.getByUserId(userId, pageable);
+            PaginationResponse<LoanResponseDTO> response = loanService.getByUserId(userId, pageable);
 
             return ResponseEntity.ok(
                     BaseResponse.builder()
@@ -75,7 +75,7 @@ public class LoanController {
         }
 
         if (bookId != null) {
-            Page<LoanResponseDTO> response = loanService.getByBookId(bookId, pageable);
+            PaginationResponse<LoanResponseDTO> response = loanService.getByBookId(bookId, pageable);
 
             return ResponseEntity.ok(
                     BaseResponse.builder()
@@ -87,7 +87,7 @@ public class LoanController {
         }
 
         if (status != null) {
-            Page<LoanResponseDTO> response = loanService.getByStatus(status, pageable);
+            PaginationResponse<LoanResponseDTO> response = loanService.getByStatus(status, pageable);
 
             return ResponseEntity.ok(
                     BaseResponse.builder()
@@ -98,7 +98,7 @@ public class LoanController {
             );
         }
 
-        Page<LoanResponseDTO> response = loanService.getAllForAdmin(pageable);
+        PaginationResponse<LoanResponseDTO> response = loanService.getAllForAdmin(pageable);
 
         return ResponseEntity.ok(
                 BaseResponse.builder()
@@ -117,7 +117,7 @@ public class LoanController {
             @RequestParam(required = false) LoanStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<LoanResponseDTO> response = loanService.getMyHistory(status, pageable);
+        PaginationResponse<LoanResponseDTO> response = loanService.getMyHistory(status, pageable);
 
         return ResponseEntity.ok(
                 BaseResponse.builder()
