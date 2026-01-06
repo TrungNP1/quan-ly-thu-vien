@@ -54,28 +54,33 @@ public class LoanService {
     // Admin tạo phiếu mượn
     @Transactional
     public List<LoanResponseDTO> loan(LoanRequestDTO dto) {
-        
+
         User user = userRepository.findByCode(dto.getUserCode())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với mã: " + dto.getUserCode()));
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với mã: " + dto.getUserCode()));
 
         // Check thông tin liên hệ
-        if (user.getPhone() == null || user.getPhone().isBlank() 
+        if (user.getPhone() == null || user.getPhone().isBlank()
                 || user.getEmail() == null || user.getEmail().isBlank()) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Người dùng chưa khai báo thông tin liên hệ (phone/email)");
+                    HttpStatus.BAD_REQUEST,
+                    "Người dùng chưa khai báo thông tin liên hệ (phone/email)");
         }
 
         // Check sách quá hạn
         if (loanRepository.existsByUserAndStatus(user, LoanStatus.OVERDUE)) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Người dùng không thể mượn vì đang có sách quá hạn chưa trả");
+                    HttpStatus.BAD_REQUEST,
+                    "Người dùng không thể mượn vì đang có sách quá hạn chưa trả");
         }
 
         // Check trùng sách trong request
         Set<Long> uniqueBookIds = new HashSet<>(dto.getBookIds());
         if (uniqueBookIds.size() != dto.getBookIds().size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không được mượn trùng sách trong 1 lần mượn");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Không được mượn trùng sách trong 1 lần mượn");
         }
 
         // Check sách đang mượn
@@ -84,13 +89,15 @@ public class LoanService {
             String duplicateBooks = existingLoans.stream()
                     .map(l -> l.getBook().getTitle())
                     .collect(Collectors.joining(", "));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đang mượn sách: " + duplicateBooks);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Đang mượn sách: " + duplicateBooks);
         }
 
         // Lấy sách và check tồn tại
         List<Book> books = bookRepository.findAllById(uniqueBookIds);
         if (books.size() != uniqueBookIds.size()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Một số sách không tồn tại");
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Một số sách không tồn tại");
         }
 
         // Check sách khả dụng
@@ -99,7 +106,7 @@ public class LoanService {
                 .map(Book::getTitle)
                 .toList();
         if (!unavailableBooks.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Sách không khả dụng: " + String.join(", ", unavailableBooks));
         }
 
@@ -114,7 +121,7 @@ public class LoanService {
         List<Loan> loans = new ArrayList<>();
         for (Book book : books) {
             book.setAvailableCopies(book.getAvailableCopies() - 1);
-            
+
             Loan entity = Loan.builder()
                     .book(book)
                     .user(user)
