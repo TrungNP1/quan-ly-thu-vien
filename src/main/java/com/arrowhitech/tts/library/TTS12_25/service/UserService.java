@@ -38,7 +38,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tên người dùng."));
         return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
                 .password(user.getPassword())
-                .authorities(user.getRole().name())
+                .authorities("ROLE_" + user.getRole().name())
                 .build();
     }
 
@@ -104,7 +104,7 @@ public class UserService implements UserDetailsService {
 
     public UserResponseDTO updateUserProfile(UpdateProfileDTO dto) {
         User user = getCurrentUser();
-        if (dto.getFullName() != null && !dto.getFullName().isEmpty()){
+        if (dto.getFullName() != null && !dto.getFullName().isEmpty()) {
             user.setFullName(dto.getFullName().trim());
         }
 

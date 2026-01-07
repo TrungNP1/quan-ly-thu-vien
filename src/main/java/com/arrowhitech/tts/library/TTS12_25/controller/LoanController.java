@@ -1,0 +1,130 @@
+package com.arrowhitech.tts.library.TTS12_25.controller;
+
+import com.arrowhitech.tts.library.TTS12_25.dto.loan.LoanRequestDTO;
+import com.arrowhitech.tts.library.TTS12_25.dto.loan.LoanResponseDTO;
+import com.arrowhitech.tts.library.TTS12_25.enums.LoanStatus;
+import com.arrowhitech.tts.library.TTS12_25.response.BaseResponse;
+import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
+import com.arrowhitech.tts.library.TTS12_25.service.LoanService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/loans")
+@RequiredArgsConstructor
+public class LoanController {
+    private final LoanService loanService;
+
+    @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse<?>> loan(
+            @Valid @RequestBody LoanRequestDTO dto) {
+        List<LoanResponseDTO> response = loanService.loan(dto);
+        return ResponseEntity.ok(
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Mượn thành công!")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @PutMapping("/{id}/return")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse<?>> returned(
+            @PathVariable Long id
+    ) {
+        LoanResponseDTO response = loanService.returned(id);
+        return ResponseEntity.ok(
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Trả sách thành công!")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse<?>> getAllLoans(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long bookId,
+            @RequestParam(required = false) LoanStatus status
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (userId != null) {
+            PaginationResponse<LoanResponseDTO> response = loanService.getByUserId(userId, pageable);
+
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Lấy dữ liệu thành công")
+                            .data(response)
+                            .build()
+            );
+        }
+
+        if (bookId != null) {
+            PaginationResponse<LoanResponseDTO> response = loanService.getByBookId(bookId, pageable);
+
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Lấy dữ liệu thành công")
+                            .data(response)
+                            .build()
+            );
+        }
+
+        if (status != null) {
+            PaginationResponse<LoanResponseDTO> response = loanService.getByStatus(status, pageable);
+
+            return ResponseEntity.ok(
+                    BaseResponse.builder()
+                            .status(200)
+                            .message("Lấy dữ liệu thành công")
+                            .data(response)
+                            .build()
+            );
+        }
+
+        PaginationResponse<LoanResponseDTO> response = loanService.getAllForAdmin(pageable);
+
+        return ResponseEntity.ok(
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Lấy dữ liệu thành công")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @GetMapping("/my-history")
+    @PreAuthorize("hasRole('READER')")
+    public ResponseEntity<BaseResponse<?>> getMyHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) LoanStatus status
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        PaginationResponse<LoanResponseDTO> response = loanService.getMyHistory(status, pageable);
+
+        return ResponseEntity.ok(
+                BaseResponse.builder()
+                        .status(200)
+                        .message("Lấy dữ liệu thành công")
+                        .data(response)
+                        .build()
+        );
+    }
+}
