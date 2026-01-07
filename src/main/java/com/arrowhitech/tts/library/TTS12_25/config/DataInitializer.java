@@ -60,11 +60,15 @@ public class DataInitializer implements CommandLineRunner {
         Category catVanHoc = createCategoryIfNotExists("Văn học", "Sách văn học trong và ngoài nước");
         Category catKhoaHoc = createCategoryIfNotExists("Khoa học", "Sách khoa học tự nhiên và xã hội");
         Category catCongNghe = createCategoryIfNotExists("Công nghệ", "Sách về công nghệ thông tin, lập trình");
-
+        Category catTruyenTranh = createCategoryIfNotExists("Truyện tranh", "Truyện với hình vẽ và nội dung phù hợp với trẻ em");
         // Tạo Books
         createBookIfNotExists("Dế Mèn Phiêu Lưu Ký", "Tô Hoài", "Tác phẩm văn học thiếu nhi nổi tiếng", 10L, catVanHoc);
         createBookIfNotExists("Clean Code", "Robert C. Martin", "Sách về kỹ thuật viết code sạch", 5L, catCongNghe);
         createBookIfNotExists("Vũ trụ trong vỏ hạt dẻ", "Stephen Hawking", "Sách khoa học phổ thông về vũ trụ", 3L, catKhoaHoc);
+        createBookIfNotExists("Mắt biếc", "Nguyễn Nhật Ánh", "Tiểu thuyết văn học nổi tiếng", 6L, catVanHoc);
+        createBookIfNotExists("Kafka bên bờ biển", "Murakami Haruki", "Tiểu thuyết văn học nổi tiếng của nhật bản", 4L, catVanHoc);
+        createBookIfNotExists("Chú khủng long của Nobita", "Fujio F. Fujiko", "Câu chuyện dài đầu tiên của doraemon kể về cuộc hành trình trở về thời kì khủng long thống trị", 9L, catTruyenTranh);
+        createBookIfNotExists("Nhật ký trong tù", "Hồ Chí Minh", "Quyển sách tuyển tập các tập thơ của Bác Hồ khi bị giam trong nhà tù Tưởng Giới Thạch", 3L, catVanHoc);
     }
 
     private Category createCategoryIfNotExists(String name, String description) {

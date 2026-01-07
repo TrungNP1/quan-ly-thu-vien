@@ -213,29 +213,21 @@ PUT http://localhost:8080/api/books/1/activate
 Authorization: Bearer <accessToken>
 ```
 
-### Tìm sách theo tên - User (READER)
+### Tìm sách theo tên (ADMIN hoặc READER)
 ```
 GET http://localhost:8080/api/books/search?title=Java&page=0&size=10
 Authorization: Bearer <accessToken>
 ```
+> ADMIN: thấy tất cả sách (kể cả ngừng phát hành)
+> READER: chỉ thấy sách đang phát hành
 
-### Tìm sách theo tác giả - User (READER)
+### Tìm sách theo tác giả (ADMIN hoặc READER)
 ```
 GET http://localhost:8080/api/books/search?author=Hoàng&page=0&size=10
 Authorization: Bearer <accessToken>
 ```
-
-### Tìm sách theo tên - Admin (ADMIN)
-```
-GET http://localhost:8080/api/books/search/admin?title=Java&page=0&size=10
-Authorization: Bearer <accessToken>
-```
-
-### Tìm sách theo tác giả - Admin (ADMIN)
-```
-GET http://localhost:8080/api/books/search/admin?author=Hoàng&page=0&size=10
-Authorization: Bearer <accessToken>
-```
+> ADMIN: thấy tất cả sách (kể cả ngừng phát hành)
+> READER: chỉ thấy sách đang phát hành
 
 ---
 

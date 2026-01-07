@@ -4,6 +4,8 @@ import com.arrowhitech.tts.library.TTS12_25.dto.book.BookRequestDTO;
 import com.arrowhitech.tts.library.TTS12_25.dto.book.BookResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.entity.Book;
 import com.arrowhitech.tts.library.TTS12_25.entity.Category;
+import com.arrowhitech.tts.library.TTS12_25.entity.User;
+import com.arrowhitech.tts.library.TTS12_25.enums.Role;
 import com.arrowhitech.tts.library.TTS12_25.repository.BookRepository;
 import com.arrowhitech.tts.library.TTS12_25.repository.CategoryRepository;
 import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
@@ -24,6 +26,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
+    private final UserService userService;
 
     //Hàm dùng chung
     private BookResponseDTO toDTO(Book book){
@@ -164,30 +167,33 @@ public class BookService {
     }
 
     //Tìm kiếm
-    //Tên sách cho User
-    public PaginationResponse<BookResponseDTO> searchTitleForUser(String title, Pageable page){
-        Page<Book> books = bookRepository.findAvailableBooksByTitle(title, page);
+    //Theo tên sách
+    public PaginationResponse<BookResponseDTO> searchByTitle(String title, Pageable page){
+        User user = userService.getCurrentUser();
+
+        Page<Book> books;
+
+        if(user.getRole() == Role.ADMIN) {
+            books = bookRepository.findByTitleContainingIgnoreCase(title, page);
+        }
+        else {
+            books = bookRepository.findAvailableBooksByTitle(title, page);
+        }
+        
         Page<BookResponseDTO> dtoPage = books.map(this::toDTO);
         return PaginationResponse.from(dtoPage);
     }
 
-    //Tên sách cho Admin
-    public PaginationResponse<BookResponseDTO> searchTitleForAdmin(String title, Pageable page){
-        Page<Book> books = bookRepository.findByTitleContainingIgnoreCase(title, page);
-        Page<BookResponseDTO> dtoPage = books.map(this::toDTO);
-        return PaginationResponse.from(dtoPage);
-    }
-
-    //Tên tác giả cho User
-    public PaginationResponse<BookResponseDTO> searchAuthorForUser(String author, Pageable page){
-        Page<Book> books = bookRepository.findAvailableBooksByAuthor(author, page);
-        Page<BookResponseDTO> dtoPage = books.map(this::toDTO);
-        return PaginationResponse.from(dtoPage);
-    }
-
-    //Tên tác giả cho Admin
-    public PaginationResponse<BookResponseDTO> searchAuthorForAdmin(String author, Pageable page){
-        Page<Book> books = bookRepository.findByAuthorContainingIgnoreCase(author, page);
+    //Theo tên tác giả
+    public PaginationResponse<BookResponseDTO> searchByAuthor(String author, Pageable page){
+        User user = userService.getCurrentUser();
+        Page<Book> books;
+        if(user.getRole() == Role.ADMIN) {
+            books = bookRepository.findByAuthorContainingIgnoreCase(author, page);
+        }
+        else {
+            books = bookRepository.findAvailableBooksByAuthor(author, page);
+        }
         Page<BookResponseDTO> dtoPage = books.map(this::toDTO);
         return PaginationResponse.from(dtoPage);
     }

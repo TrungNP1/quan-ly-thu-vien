@@ -149,8 +149,7 @@ public class BookController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('READER')")
-    public ResponseEntity<BaseResponse<?>> searchForUser(
+    public ResponseEntity<BaseResponse<?>> searchBook(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String title,
@@ -163,7 +162,7 @@ public class BookController {
         }
 
         if (title != null) {
-            PaginationResponse<BookResponseDTO> response = bookService.searchTitleForUser(title, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchByTitle(title, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -172,42 +171,7 @@ public class BookController {
                             .build()
             );
         } else {
-            PaginationResponse<BookResponseDTO> response = bookService.searchAuthorForUser(author, pageable);
-            return ResponseEntity.ok(
-                    BaseResponse.builder()
-                            .status(200)
-                            .message("Tìm kiếm thông tin sách thành công")
-                            .data(response)
-                            .build()
-            );
-        }
-    }
-
-    @GetMapping("/search/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BaseResponse<?>> searchForAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-
-        if (title == null && author == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập từ khóa");
-        }
-
-        if (title != null) {
-            PaginationResponse<BookResponseDTO> response = bookService.searchTitleForAdmin(title, pageable);
-            return ResponseEntity.ok(
-                    BaseResponse.builder()
-                            .status(200)
-                            .message("Tìm kiếm thông tin sách thành công")
-                            .data(response)
-                            .build()
-            );
-        } else {
-            PaginationResponse<BookResponseDTO> response = bookService.searchAuthorForAdmin(author, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchByAuthor(author, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
