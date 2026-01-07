@@ -31,16 +31,16 @@ public class BookService {
     //Hàm dùng chung
     private BookResponseDTO toDTO(Book book){
         return BookResponseDTO.builder()
-            .id(book.getId())
-            .categoryId(book.getCategory().getId())
-            .categoryName(book.getCategory().getName())
-            .title(book.getTitle())
-            .author(book.getAuthor())
-            .totalCopies(book.getTotalCopies())
-            .description(book.getDescription())
-            .availableCopies(book.getAvailableCopies())
-            .isActive(book.getIsActive())
-            .build();
+                .id(book.getId())
+                .categoryId(book.getCategory().getId())
+                .categoryName(book.getCategory().getName())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .totalCopies(book.getTotalCopies())
+                .description(book.getDescription())
+                .availableCopies(book.getAvailableCopies())
+                .isActive(book.getIsActive())
+                .build();
     }
 
     //Tạo sách mới
@@ -58,27 +58,27 @@ public class BookService {
         }
 
         Category category = categoryRepository.findById(dto.getCategoryId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thể loại"));
-        
-            Book entity = Book.builder()
-            .title(dto.getTitle())
-            .description(dto.getDescription())
-            .category(category)
-            .author(dto.getAuthor())
-            .totalCopies(dto.getTotalCopies())
-            .availableCopies(dto.getTotalCopies())
-            .build();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thể loại"));
 
-            Book saved = bookRepository.save(entity);
+        Book entity = Book.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .category(category)
+                .author(dto.getAuthor())
+                .totalCopies(dto.getTotalCopies())
+                .availableCopies(dto.getTotalCopies())
+                .build();
 
-            return toDTO(saved);
+        Book saved = bookRepository.save(entity);
+
+        return toDTO(saved);
     }
 
     //Sửa sách
     public BookResponseDTO update(Long id, BookRequestDTO dto){
         Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
-        
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
+
         Optional<Book> duplicate = bookRepository.findByTitleAndAuthor(dto.getTitle(), dto.getAuthor());
 
         if(duplicate.isPresent() && !duplicate.get().getId().equals(id)){
@@ -86,7 +86,7 @@ public class BookService {
         }
 
         Category category = categoryRepository.findById(dto.getCategoryId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thể loại"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thể loại"));
 
         Long borrowed = book.getTotalCopies() - book.getAvailableCopies();
 
@@ -104,19 +104,19 @@ public class BookService {
         book.setAvailableCopies(newAvailable);
 
         bookRepository.save(book);
-        
+
         return toDTO(book);
     }
 
     //Ngừng phát hành
     public BookResponseDTO deactivate(Long id){
         Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
 
         if(!book.getIsActive()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sách đã ngừng phát hành, không cần thay đổi");
         }
-            
+
         book.setIsActive(false);
         bookRepository.save(book);
         return toDTO(book);
@@ -125,12 +125,12 @@ public class BookService {
     //Phát hành trở lại
     public BookResponseDTO activate(Long id){
         Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
 
         if(book.getIsActive()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sách đang phát hành, không cần thay đổi");
         }
-        
+
         book.setIsActive(true);
         bookRepository.save(book);
         return toDTO(book);
@@ -139,9 +139,9 @@ public class BookService {
     //Xem chi tiết
     public BookResponseDTO getBookDetail(Long id){
         Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
 
-        return toDTO(book);    
+        return toDTO(book);
     }
 
     //Lấy danh sách
@@ -168,18 +168,16 @@ public class BookService {
 
     //Tìm kiếm
     //Theo tên sách
-    public PaginationResponse<BookResponseDTO> searchByTitle(String title, Pageable page){
+    public PaginationResponse<BookResponseDTO> searchByTitle(String title, Pageable page) {
         User user = userService.getCurrentUser();
 
         Page<Book> books;
 
-        if(user.getRole() == Role.ADMIN) {
+        if (user.getRole() == Role.ADMIN) {
             books = bookRepository.findByTitleContainingIgnoreCase(title, page);
-        }
-        else {
+        } else {
             books = bookRepository.findAvailableBooksByTitle(title, page);
         }
-        
         Page<BookResponseDTO> dtoPage = books.map(this::toDTO);
         return PaginationResponse.from(dtoPage);
     }

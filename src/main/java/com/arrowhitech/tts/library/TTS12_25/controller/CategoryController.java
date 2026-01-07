@@ -69,7 +69,6 @@ public class CategoryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
     public ResponseEntity<BaseResponse<?>> getAll() {
         List<CategoryResponseDTO> catList = categoryService.getAll();
         return ResponseEntity.ok(
