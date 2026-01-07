@@ -75,6 +75,7 @@ public class BookController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('READER')")
     public ResponseEntity<BaseResponse<?>> getAllForUser(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -148,6 +149,7 @@ public class BookController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
     public ResponseEntity<BaseResponse<?>> searchBook(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
