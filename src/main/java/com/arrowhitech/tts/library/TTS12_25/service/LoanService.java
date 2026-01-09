@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -54,6 +56,12 @@ public class LoanService {
 
     // Admin tạo phiếu mượn
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
     public List<LoanResponseDTO> loan(LoanRequestDTO dto) {
 
         User user = userRepository.findByCode(dto.getUserCode())
@@ -140,6 +148,12 @@ public class LoanService {
 
     //Trả sách
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
     public LoanResponseDTO returned(Long id) {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(

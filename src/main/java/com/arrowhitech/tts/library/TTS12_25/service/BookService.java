@@ -12,6 +12,9 @@ import com.arrowhitech.tts.library.TTS12_25.response.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,12 @@ public class BookService {
     }
 
     //Tạo sách mới
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
     public BookResponseDTO create(BookRequestDTO dto){
         Optional<Book> existingBook = bookRepository.findByTitleAndAuthor(dto.getTitle(), dto.getAuthor());
 
@@ -75,6 +84,12 @@ public class BookService {
     }
 
     //Sửa sách
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
     public BookResponseDTO update(Long id, BookRequestDTO dto){
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
@@ -109,6 +124,12 @@ public class BookService {
     }
 
     //Ngừng phát hành
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
     public BookResponseDTO deactivate(Long id){
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
@@ -123,6 +144,13 @@ public class BookService {
     }
 
     //Phát hành trở lại
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "book-search-title", allEntries = true),
+                    @CacheEvict(value = "book-search-author", allEntries = true)
+            }
+    )
+
     public BookResponseDTO activate(Long id){
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sách"));
@@ -168,12 +196,12 @@ public class BookService {
 
     //Tìm kiếm
     //Theo tên sách
-    public PaginationResponse<BookResponseDTO> searchByTitle(String title, Pageable page) {
-        User user = userService.getCurrentUser();
+    @Cacheable(value = "book-search-title", key = "#title.toLowerCase() + ':page:' + #page.pageNumber + ':size:' + #page.pageSize + ':role:' + #role")
+    public PaginationResponse<BookResponseDTO> searchByTitle(String title, Role role, Pageable page){
 
         Page<Book> books;
 
-        if (user.getRole() == Role.ADMIN) {
+        if(role == Role.ADMIN) {
             books = bookRepository.findByTitleContainingIgnoreCase(title, page);
         } else {
             books = bookRepository.findAvailableBooksByTitle(title, page);
@@ -183,10 +211,11 @@ public class BookService {
     }
 
     //Theo tên tác giả
-    public PaginationResponse<BookResponseDTO> searchByAuthor(String author, Pageable page){
-        User user = userService.getCurrentUser();
+    @Cacheable(value = "book-search-author", key = "#author.toLowerCase() + ':page:' + #page.pageNumber + ':size:' + #page.pageSize + ':role:' + #role")
+    public PaginationResponse<BookResponseDTO> searchByAuthor(String author, Role role, Pageable page){
+
         Page<Book> books;
-        if(user.getRole() == Role.ADMIN) {
+        if(role == Role.ADMIN) {
             books = bookRepository.findByAuthorContainingIgnoreCase(author, page);
         }
         else {
