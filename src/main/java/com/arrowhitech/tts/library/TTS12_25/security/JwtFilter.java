@@ -9,14 +9,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -45,16 +43,20 @@ public class JwtFilter extends OncePerRequestFilter {
                     //Kiểm tra Redis
                     String revocationKey = "revocation:user:" + username;
                     String revocationTimestampStr = redisTemplate.opsForValue().get(revocationKey);
-
                     if (revocationTimestampStr != null) {
-                        long revocationTimestamp = Long.parseLong(revocationTimestampStr);
-                        long tokenIat = jwtService.extractIssuedAt(token);
+                        try {
+                            long revocationTimestamp = Long.parseLong(revocationTimestampStr);
+                            long tokenIat = jwtService.extractIssuedAt(token);
 
-                        if (tokenIat < revocationTimestamp) {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"message\": \"Phiên đăng nhập hết hạn do đổi mật khẩu\"}");
-                            return; // Ngắt filter chain ngay lập tức
+                            // Token được tạo trước thời điểm đổi mật khẩu sẽ bị từ chối
+                            if (tokenIat < revocationTimestamp) {
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"message\": \"Phiên đăng nhập hết hạn do đổi mật khẩu\"}");
+                                return;
+                            }
+                        } catch (RuntimeException ignored) {
+
                         }
                     }
 
