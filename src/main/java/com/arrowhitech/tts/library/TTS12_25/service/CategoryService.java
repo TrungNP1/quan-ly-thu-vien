@@ -41,9 +41,7 @@ public class CategoryService {
 
         Category saved = categoryRepository.save(entity);
 
-        CategoryResponseDTO reponse = toDTO(saved);
-
-        return reponse;
+        return toDTO(saved);
     }
 
     public CategoryResponseDTO update(Long id, CategoryRequestDTO dto){

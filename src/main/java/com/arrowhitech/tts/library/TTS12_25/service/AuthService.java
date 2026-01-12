@@ -6,10 +6,13 @@ import com.arrowhitech.tts.library.TTS12_25.dto.auth.RefreshTokenResponseDTO;
 import com.arrowhitech.tts.library.TTS12_25.entity.User;
 import com.arrowhitech.tts.library.TTS12_25.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +22,7 @@ public class AuthService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StringRedisTemplate redisTemplate;
 
     public RefreshTokenResponseDTO refreshToken(String refreshToken) {
         if (refreshToken == null || refreshToken.isEmpty()) {
@@ -32,6 +36,19 @@ public class AuthService {
         String username = jwtService.extractUsername(refreshToken);
         if (username == null) {
             throw new IllegalArgumentException("Không thể trích xuất thông tin từ refresh token.");
+        }
+
+        // KIỂM TRA REDIS
+        String key = "revocation:user:" + username;
+        String revocationTimeStr = redisTemplate.opsForValue().get(key);
+
+        if (revocationTimeStr != null) {
+            long revocationTime = Long.parseLong(revocationTimeStr);
+            long refreshTokenIat = jwtService.extractIssuedAt(refreshToken);
+
+            if (refreshTokenIat < revocationTime) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Phiên làm việc hết hạn");
+            }
         }
 
         String newAccessToken = jwtService.generateAccessToken(username);
@@ -70,8 +87,23 @@ public class AuthService {
             throw new IllegalArgumentException("Không thể trích xuất thông tin từ reset token.");
         }
 
-        // Reset password
+        //Kiểm tra xem chính Reset Token này có hợp lệ so với mốc thu hồi cũ không
+        String key = "revocation:user:" + username;
+        String revocationTimeStr = redisTemplate.opsForValue().get(key);
+        if (revocationTimeStr != null) {
+            long revocationTime = Long.parseLong(revocationTimeStr);
+            if (jwtService.extractIssuedAt(resetToken) < revocationTime) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Reset token đã hết hạn do có thay đổi mật khẩu trước đó.");
+            }
+        }
+
+        // Thực hiện đổi mật khẩu trong DB
         userService.resetPassword(username, newPassword);
+
+        //Cập nhật mốc thu hồi mới vào Redis
+        // Việc này giúp invalidate tất cả AccessToken/RefreshToken cũ sau khi reset thành công
+        long newRevocationTimestamp = (System.currentTimeMillis() / 1000) + 5;
+        redisTemplate.opsForValue().set(key, String.valueOf(newRevocationTimestamp), 1, TimeUnit.DAYS);
     }
 
     public void changePassword(ChangePasswordRequestDTO req){
@@ -87,6 +119,14 @@ public class AuthService {
 
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
+
+        // LƯU MỐC THỜI GIAN THU HỒI VÀO REDIS
+        // Lấy thời gian hiện tại (giây) + 5 giây  để xử lý Race Condition
+        long revocationTimestamp = (System.currentTimeMillis() / 1000) + 5;
+        String key = "revocation:user:" + user.getUsername(); // Hoặc dùng user.getId()
+
+        // TTL là 1 ngày (bằng thời hạn Refresh Token)
+        redisTemplate.opsForValue().set(key, String.valueOf(revocationTimestamp), 1, TimeUnit.DAYS);
     }
 }
 

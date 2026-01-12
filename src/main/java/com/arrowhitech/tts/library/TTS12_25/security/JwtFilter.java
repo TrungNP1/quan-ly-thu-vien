@@ -8,12 +8,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -24,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,13 +37,30 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            // Validate token trước (không query DB nếu token invalid)
+
             if (jwtService.validateToken(token)) {
                 String username = jwtService.extractUsername(token);
+
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    //Kiểm tra Redis
+                    String revocationKey = "revocation:user:" + username;
+                    String revocationTimestampStr = redisTemplate.opsForValue().get(revocationKey);
+
+                    if (revocationTimestampStr != null) {
+                        long revocationTimestamp = Long.parseLong(revocationTimestampStr);
+                        long tokenIat = jwtService.extractIssuedAt(token);
+
+                        if (tokenIat < revocationTimestamp) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"message\": \"Phiên đăng nhập hết hạn do đổi mật khẩu\"}");
+                            return; // Ngắt filter chain ngay lập tức
+                        }
+                    }
+
+                    // Tiếp tục logic xác thực nếu pass qua Redis
                     try {
                         UserDetails userDetails = userService.loadUserByUsername(username);
-                        // Double check với username để đảm bảo
                         if (jwtService.validateToken(token, username)) {
                             UsernamePasswordAuthenticationToken auth =
                                     new UsernamePasswordAuthenticationToken(
@@ -47,8 +68,7 @@ public class JwtFilter extends OncePerRequestFilter {
                             SecurityContextHolder.getContext().setAuthentication(auth);
                         }
                     } catch (UsernameNotFoundException e) {
-                        // User không tồn tại, bỏ qua (có thể token cũ hoặc invalid)
-                        // Không set authentication, request sẽ được xử lý bình thường
+                        // Để filter tự trôi đi, SecurityContext trống sẽ bị chặn ở SecurityConfig
                     }
                 }
             }

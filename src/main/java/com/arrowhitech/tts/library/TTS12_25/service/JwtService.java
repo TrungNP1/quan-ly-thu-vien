@@ -96,4 +96,17 @@ public class JwtService {
             return false;
         }
     }
+
+    public Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    // Lấy thời điểm phát hành (iat) tính bằng giây
+    public long extractIssuedAt(String token) {
+        return extractAllClaims(token).getIssuedAt().getTime() / 1000;
+    }
 }
