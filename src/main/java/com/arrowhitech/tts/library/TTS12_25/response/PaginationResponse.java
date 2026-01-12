@@ -1,5 +1,6 @@
 package com.arrowhitech.tts.library.TTS12_25.response;
 
+import java.io.Serializable;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -12,7 +13,8 @@ import org.springframework.data.domain.Page;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaginationResponse<T> {
+public class PaginationResponse<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int page;
     private int size;
     private long totalElements;

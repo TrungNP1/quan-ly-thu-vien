@@ -2,6 +2,8 @@ package com.arrowhitech.tts.library.TTS12_25.controller;
 
 import com.arrowhitech.tts.library.TTS12_25.dto.book.BookRequestDTO;
 
+import com.arrowhitech.tts.library.TTS12_25.enums.Role;
+import com.arrowhitech.tts.library.TTS12_25.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
+    private final UserService userService;
 
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
@@ -158,12 +161,14 @@ public class BookController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
+        Role role = userService.getCurrentUser().getRole();
+
         if (title == null && author == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập từ khóa");
         }
 
         if (title != null) {
-            PaginationResponse<BookResponseDTO> response = bookService.searchByTitle(title, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchByTitle(title, role, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
@@ -172,7 +177,7 @@ public class BookController {
                             .build()
             );
         } else {
-            PaginationResponse<BookResponseDTO> response = bookService.searchByAuthor(author, pageable);
+            PaginationResponse<BookResponseDTO> response = bookService.searchByAuthor(author, role, pageable);
             return ResponseEntity.ok(
                     BaseResponse.builder()
                             .status(200)
