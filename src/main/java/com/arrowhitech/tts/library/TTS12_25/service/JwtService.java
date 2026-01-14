@@ -80,10 +80,10 @@ public class JwtService {
         }
     }
 
-    public boolean validateToken(String token, String username) {
-        String extracted = extractUsername(token);
-        return extracted != null && extracted.equals(username);
-    }
+//    public boolean validateToken(String token, String username) {
+//        String extracted = extractUsername(token);
+//        return extracted != null && extracted.equals(username);
+//    }
 
     public boolean validateToken(String token) {
         try {

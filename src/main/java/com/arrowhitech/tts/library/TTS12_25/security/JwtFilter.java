@@ -2,6 +2,8 @@ package com.arrowhitech.tts.library.TTS12_25.security;
 
 import com.arrowhitech.tts.library.TTS12_25.service.JwtService;
 import com.arrowhitech.tts.library.TTS12_25.service.UserService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,42 +38,55 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            if (jwtService.validateToken(token)) {
-                String username = jwtService.extractUsername(token);
+            // Parse token một lần duy nhất và lấy Claims
+            Claims claims;
+            try {
+                claims = jwtService.extractAllClaims(token);
+            } catch (JwtException e) {
+                // Token không hợp lệ, bỏ qua và tiếp tục filter chain
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    //Kiểm tra Redis
-                    String revocationKey = "revocation:user:" + username;
-                    String revocationTimestampStr = redisTemplate.opsForValue().get(revocationKey);
-                    if (revocationTimestampStr != null) {
-                        try {
-                            long revocationTimestamp = Long.parseLong(revocationTimestampStr);
-                            long tokenIat = jwtService.extractIssuedAt(token);
+            // Extract username từ Claims đã parse
+            String username = claims.getSubject();
 
-                            // Token được tạo trước thời điểm đổi mật khẩu sẽ bị từ chối
-                            if (tokenIat < revocationTimestamp) {
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.setContentType("application/json;charset=UTF-8");
-                                response.getWriter().write("{\"message\": \"Phiên đăng nhập hết hạn do đổi mật khẩu\"}");
-                                return;
-                            }
-                        } catch (RuntimeException ignored) {
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Kiểm tra Redis revocation
+                String revocationKey = "revocation:user:" + username;
+                String revocationTimestampStr = redisTemplate.opsForValue().get(revocationKey);
 
-                        }
-                    }
-
-                    // Tiếp tục logic xác thực nếu pass qua Redis
+                if (revocationTimestampStr != null && claims.getIssuedAt() != null) {
                     try {
-                        UserDetails userDetails = userService.loadUserByUsername(username);
-                        if (jwtService.validateToken(token, username)) {
-                            UsernamePasswordAuthenticationToken auth =
-                                    new UsernamePasswordAuthenticationToken(
-                                            userDetails, null, userDetails.getAuthorities());
-                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        long revocationTimestamp = Long.parseLong(revocationTimestampStr);
+                        // Extract iat từ Claims đã parse (không cần parse lại token)
+                        long tokenIat = claims.getIssuedAt().getTime() / 1000;
+
+                        // Token được tạo trước thời điểm đổi mật khẩu sẽ bị từ chối
+                        if (tokenIat < revocationTimestamp) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"message\": \"Phiên đăng nhập hết hạn do đổi mật khẩu\"}");
+                            return;
                         }
-                    } catch (UsernameNotFoundException e) {
-                        // Để filter tự trôi đi, SecurityContext trống sẽ bị chặn ở SecurityConfig
+                    } catch (RuntimeException e) {
+                        // Log error nếu cần, nhưng không block request
                     }
+                }
+
+                // Tiếp tục logic xác thực nếu pass qua Redis
+                try {
+                    UserDetails userDetails = userService.loadUserByUsername(username);
+                    // Validate bằng cách so sánh username từ Claims với username từ UserDetails
+                    // Không cần parse lại token vì đã có Claims
+                    if (username.equals(userDetails.getUsername())) {
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                } catch (UsernameNotFoundException e) {
+                    // Để filter tự trôi đi, SecurityContext trống sẽ bị chặn ở SecurityConfig
                 }
             }
         }

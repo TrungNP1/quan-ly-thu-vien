@@ -31,12 +31,12 @@ public class AuthService {
         }
 
         if (!jwtService.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("Refresh token không hợp lệ hoặc đã hết hạn.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Refresh token không hợp lệ hoặc đã hết hạn.");
         }
 
         String username = jwtService.extractUsername(refreshToken);
         if (username == null) {
-            throw new IllegalArgumentException("Không thể trích xuất thông tin từ refresh token.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Không thể trích xuất thông tin từ refresh token.");
         }
 
         // KIỂM TRA REDIS
@@ -69,9 +69,10 @@ public class AuthService {
     @Transactional // Đảm bảo tính nhất quán
     public void resetPassword(String resetToken, String newPassword) {
 
-        // 2. Validate Token về mặt chữ ký và thời gian hết hạn (Expired)
+        // Validate Token về mặt chữ ký và thời gian hết hạn (Expired)
         if (!jwtService.validateToken(resetToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token không hợp lệ.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Token không hợp lệ hoặc đã hết hạn.");
         }
 
         String username = jwtService.extractUsername(resetToken);
@@ -83,7 +84,8 @@ public class AuthService {
             long lastRevocation = Long.parseLong(lastRevocationStr);
             // Nếu Token phát hành trước thời điểm thu hồi -> Token đã bị vô hiệu hóa
             if (jwtService.extractIssuedAt(resetToken) < lastRevocation) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Link reset này đã bị vô hiệu hóa.");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Token reset này đã bị vô hiệu hóa.");
             }
         }
 
@@ -91,11 +93,12 @@ public class AuthService {
         // Nếu dòng này lỗi, Transaction sẽ rollback, Redis bên dưới sẽ không bị update
         userService.resetPassword(username, newPassword);
 
-        //bCẬP NHẬT MỐC THU HỒI MỚI VÀO REDIS
+        //CẬP NHẬT MỐC THU HỒI MỚI VÀO REDIS
         // Vô hiệu hóa tất cả Access/Refresh/Reset token cũ đang tồn tại
         try {
             long newRevocationTimestamp = (System.currentTimeMillis() / 1000);
-            redisTemplate.opsForValue().set(key, String.valueOf(newRevocationTimestamp), 1, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(key, String.valueOf(newRevocationTimestamp),
+                    1, TimeUnit.DAYS);
         } catch (Exception e) {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống bảo mật.");
